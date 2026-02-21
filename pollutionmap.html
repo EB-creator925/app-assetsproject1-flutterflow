@@ -5,6 +5,7 @@
 <title>Carte Pollution Lumineuse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
 html, body { height: 100%; margin: 0; }
@@ -18,6 +19,7 @@ html, body { height: 100%; margin: 0; }
   font-family: sans-serif;
   font-size: 12px;
   border-radius: 4px;
+  z-index: 1000;
 }
 </style>
 </head>
@@ -37,25 +39,27 @@ html, body { height: 100%; margin: 0; }
   9 - Centre ville
 </div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// Centre initial sur France
+// Centre initial sur la France
 const initialLat = 46.6;
 const initialLon = 2.5;
 const initialZoom = 6;
 
-// Création carte
+// Création de la carte
 const map = L.map('map', { minZoom: 2, maxZoom: 12 }).setView([initialLat, initialLon], initialZoom);
 
-// Tuiles pollution lumineuse (Light Pollution Map)
-const lpTile = L.tileLayer('https://tiles.lightpollutionmap.info/{z}/{x}/{y}.png', {
+// Tuiles pollution lumineuse (compatible CORS)
+const lpTile = L.tileLayer('https://cartes.lightpollutionmap.info/tiles/{z}/{x}/{y}.png', {
   attribution: '&copy; Light Pollution Map',
   opacity: 0.6
 }).addTo(map);
 
-// Marker et info sur clic
+// Marker draggable
 const marker = L.marker([initialLat, initialLon], { draggable: true }).addTo(map);
 
+// Fonction pour envoyer les coordonnées à FlutterFlow
 function updateCoords(lat, lng) {
   if (window.flutter_inappwebview) {
     window.flutter_inappwebview.callHandler('mapClicked', { markerPos: { lat, lng } });
@@ -63,11 +67,13 @@ function updateCoords(lat, lng) {
   console.log(`Lat: ${lat}, Lng: ${lng}`);
 }
 
+// Détecte le clic sur la carte
 map.on('click', function(e) {
   marker.setLatLng(e.latlng);
   updateCoords(e.latlng.lat, e.latlng.lng);
 });
 
+// Détecte le drag du marker
 marker.on('dragend', function(e) {
   const pos = marker.getLatLng();
   updateCoords(pos.lat, pos.lng);
