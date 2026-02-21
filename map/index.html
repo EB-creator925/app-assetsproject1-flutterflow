@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Carte interactive OSM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 100%;"></div>
+  <script>
+    // Coordonnées initiales par défaut (centre France)
+    var lat = 46.6;
+    var lon = 2.5;
+    var zoom = 6;
+
+    var map = L.map('map').setView([lat, lon], zoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Création d'un marqueur que l'on pourra déplacer
+    var marker = L.marker([lat, lon], {draggable:true}).addTo(map);
+
+    // Fonction pour mettre à jour le marker au clic sur la carte
+    function onMapClick(e) {
+      marker.setLatLng(e.latlng);
+      // Appel FlutterFlow pour récupérer les coordonnées
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('mapClicked', e.latlng.lat, e.latlng.lng);
+      }
+    }
+
+    map.on('click', onMapClick);
+
+    // Pour permettre à l'utilisateur de déplacer le marker
+    marker.on('dragend', function(e){
+      var pos = marker.getLatLng();
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('mapClicked', pos.lat, pos.lng);
+      }
+    });
+  </script>
+</body>
+</html>
