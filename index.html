@@ -49,10 +49,7 @@
     const maxZoom = 18;
 
     // Création de la carte
-    const map = L.map('map', {
-      minZoom: minZoom,
-      maxZoom: maxZoom
-    }).setView([initialLat, initialLon], initialZoom);
+    const map = L.map('map', { minZoom, maxZoom }).setView([initialLat, initialLon], initialZoom);
 
     // Tuiles OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -62,14 +59,15 @@
     // Création d'un marker draggable
     const marker = L.marker([initialLat, initialLon], { draggable: true }).addTo(map);
 
-    // Fonction pour mettre à jour le marker et les coordonnées
+    // Fonction pour mettre à jour le marker et envoyer les coordonnées à FlutterFlow
     function updateCoords(lat, lng) {
+      // Affichage pour debug
       document.getElementById('lat').textContent = lat.toFixed(6);
       document.getElementById('lng').textContent = lng.toFixed(6);
 
-      // FlutterFlow integration
+      // Envoi à FlutterFlow via JavaScript handler
       if (window.flutter_inappwebview) {
-        window.flutter_inappwebview.callHandler('mapClicked', lat, lng);
+        window.flutter_inappwebview.callHandler('mapClicked', { markerPos: { lat: lat, lng: lng } });
       }
     }
 
@@ -79,14 +77,12 @@
       const lng = e.latlng.lng;
       marker.setLatLng(e.latlng);
       updateCoords(lat, lng);
-      alert(`Coordonnées : ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     });
 
     // Détecte le drag du marker
     marker.on('dragend', function(e) {
       const pos = marker.getLatLng();
       updateCoords(pos.lat, pos.lng);
-      alert(`Coordonnées : ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
     });
 
     // Fonction pour recentrer sur France
