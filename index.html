@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="UTF-8">
   <title>Carte interactive OSM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
   <style>
@@ -12,44 +14,90 @@
       margin: 0;
     }
     #map {
-      height: 100vh;
+      height: 80vh;
       width: 100%;
+    }
+    #coords {
+      height: 20vh;
+      padding: 10px;
+      font-family: sans-serif;
+      background: #f2f2f2;
+    }
+    button {
+      margin-top: 5px;
+      padding: 5px 10px;
     }
   </style>
 </head>
 
 <body>
   <div id="map"></div>
+  <div id="coords">
+    <div>Latitude: <span id="lat">--</span></div>
+    <div>Longitude: <span id="lng">--</span></div>
+    <button onclick="resetMarker()">Recentrer sur France</button>
+  </div>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    var lat = 46.6;
-    var lon = 2.5;
-    var zoom = 6;
+    // Coordonnées initiales centrées sur la France
+    const initialLat = 46.6;
+    const initialLon = 2.5;
+    const initialZoom = 6;
+    const minZoom = 3;
+    const maxZoom = 18;
 
-    var map = L.map('map').setView([lat, lon], zoom);
+    // Création de la carte
+    const map = L.map('map', {
+      minZoom: minZoom,
+      maxZoom: maxZoom
+    }).setView([initialLat, initialLon], initialZoom);
 
+    // Tuiles OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    var marker = L.marker([lat, lon], {draggable:true}).addTo(map);
+    // Création d'un marker draggable
+    const marker = L.marker([initialLat, initialLon], { draggable: true }).addTo(map);
 
-    function onMapClick(e) {
-      marker.setLatLng(e.latlng);
+    // Fonction pour mettre à jour le marker et les coordonnées
+    function updateCoords(lat, lng) {
+      document.getElementById('lat').textContent = lat.toFixed(6);
+      document.getElementById('lng').textContent = lng.toFixed(6);
+
+      // FlutterFlow integration
       if (window.flutter_inappwebview) {
-        window.flutter_inappwebview.callHandler('mapClicked', e.latlng.lat, e.latlng.lng);
+        window.flutter_inappwebview.callHandler('mapClicked', lat, lng);
       }
     }
 
-    map.on('click', onMapClick);
-
-    marker.on('dragend', function(){
-      var pos = marker.getLatLng();
-      if (window.flutter_inappwebview) {
-        window.flutter_inappwebview.callHandler('mapClicked', pos.lat, pos.lng);
-      }
+    // Détecte le clic sur la carte
+    map.on('click', function(e) {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+      marker.setLatLng(e.latlng);
+      updateCoords(lat, lng);
+      alert(`Coordonnées : ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     });
+
+    // Détecte le drag du marker
+    marker.on('dragend', function(e) {
+      const pos = marker.getLatLng();
+      updateCoords(pos.lat, pos.lng);
+      alert(`Coordonnées : ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
+    });
+
+    // Fonction pour recentrer sur France
+    function resetMarker() {
+      marker.setLatLng([initialLat, initialLon]);
+      map.setView([initialLat, initialLon], initialZoom);
+      updateCoords(initialLat, initialLon);
+    }
+
+    // Initialisation
+    updateCoords(initialLat, initialLon);
   </script>
 </body>
 </html>
