@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Carte Pollution Lumineuse</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+html, body { height: 100%; margin: 0; }
+#map { height: 100vh; width: 100%; }
+#legend {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255,255,255,0.9);
+  padding: 5px;
+  font-family: sans-serif;
+  font-size: 12px;
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="legend">
+  <strong>Légende Bortle</strong><br>
+  1 - Excellent ciel<br>
+  2 - Très bon ciel<br>
+  3 - Bon ciel<br>
+  4 - Suburbain clair<br>
+  5 - Suburbain<br>
+  6 - Suburbain lumineux<br>
+  7 - Ville de taille moyenne<br>
+  8 - Grande ville<br>
+  9 - Centre ville
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// Centre initial sur France
+const initialLat = 46.6;
+const initialLon = 2.5;
+const initialZoom = 6;
+
+// Création carte
+const map = L.map('map', { minZoom: 2, maxZoom: 12 }).setView([initialLat, initialLon], initialZoom);
+
+// Tuiles pollution lumineuse (Light Pollution Map)
+const lpTile = L.tileLayer('https://tiles.lightpollutionmap.info/{z}/{x}/{y}.png', {
+  attribution: '&copy; Light Pollution Map',
+  opacity: 0.6
+}).addTo(map);
+
+// Marker et info sur clic
+const marker = L.marker([initialLat, initialLon], { draggable: true }).addTo(map);
+
+function updateCoords(lat, lng) {
+  if (window.flutter_inappwebview) {
+    window.flutter_inappwebview.callHandler('mapClicked', { markerPos: { lat, lng } });
+  }
+  console.log(`Lat: ${lat}, Lng: ${lng}`);
+}
+
+map.on('click', function(e) {
+  marker.setLatLng(e.latlng);
+  updateCoords(e.latlng.lat, e.latlng.lng);
+});
+
+marker.on('dragend', function(e) {
+  const pos = marker.getLatLng();
+  updateCoords(pos.lat, pos.lng);
+});
+</script>
+
+</body>
+</html>
